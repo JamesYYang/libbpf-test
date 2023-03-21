@@ -18,7 +18,7 @@ build bptfool from kernel. download kernel code from https://github.com/microsof
 
 ```bash
 
-cd cd tools/bpf/bpftool
+cd tools/bpf/bpftool
 
 make
 
@@ -47,4 +47,4 @@ make
 
 ## Reference
 
-- https://nakryiko.com/posts/libbpf-bootstrap/ [中文](https://zhuanlan.zhihu.com/p/486585330)
+- https://nakryiko.com/posts/libbpf-bootstrap/ [[中文](https://zhuanlan.zhihu.com/p/486585330)]
