@@ -14,7 +14,9 @@ apt-get install libbpf-dev make clang llvm libelf-dev
 
 ```
 
-build bptfool from kernel. download kernel code from https://github.com/microsoft/WSL2-Linux-Kernel/releases
+build bptfool from kernel. 
+
+download kernel code from https://github.com/microsoft/WSL2-Linux-Kernel/releases
 
 ```bash
 
@@ -26,7 +28,7 @@ make install
 
 ```
 
-generate vmlinux.h
+generate `vmlinux.h`
 
 ```bash
 
@@ -34,6 +36,13 @@ bpftool btf dump file /sys/kernel/btf/vmlinux format c > src/headers/vmlinux.h
 
 ```
 
+moute debug folder
+
+```bash
+
+mount -t debugfs debugfs /sys/kernel/debug
+
+```
 
 ## How to run
 
