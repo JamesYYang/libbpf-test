@@ -1,4 +1,4 @@
-APP := hello
+APP := tp_openat
 
 all: bpf skeleton exe 
 
@@ -10,7 +10,7 @@ skeleton:
 	bpftool gen skeleton output/$(APP).bpf.o > output/$(APP).skel.h
 
 exe:
-	clang -g -O2 -Wall -I./output -c $(APP).c -o output/$(APP).o
+	clang -g -O2 -Wall -I./output -I./headers -c $(APP).c -o output/$(APP).o
 	clang -Wall -O2 -g output/$(APP).o -static -lbpf -lelf -lz -o output/$(APP)
 
 clean:

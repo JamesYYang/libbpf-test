@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 /* Copyright (c) 2020 Facebook */
 #include <stdio.h>
+#include <argp.h>
 #include <unistd.h>
-#include <sys/resource.h>
 #include <bpf/libbpf.h>
+#include <time.h>
+#include <sys/resource.h>
+#include "help.h"
 #include "tp_openat.skel.h"
 
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
@@ -11,8 +14,27 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
     return vfprintf(stderr, format, args);
 }
 
+static int handle_event(void *ctx, void *data, size_t data_sz)
+{
+    const struct sys_openat_event *e = data;
+
+    struct tm *tm;
+    char ts[32];
+    time_t t;
+
+    time(&t);
+    tm = localtime(&t);
+    strftime(ts, sizeof(ts), "%H:%M:%S", tm);
+
+    printf("%-8s %-5s %-16s %-7d %-7d %s\n",
+           ts, "OPENAT", e->comm, e->pid, e->ppid, e->filename);
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
+    struct ring_buffer *rb = NULL;
     struct tp_openat_bpf *skel;
     int err;
 
@@ -43,17 +65,35 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    printf("Successfully started! Please run `sudo cat /sys/kernel/debug/tracing/trace_pipe` "
-           "to see output of the BPF programs.\n");
-
-    for (;;)
+    /* Set up ring buffer polling */
+    rb = ring_buffer__new(bpf_map__fd(skel->maps.sys_enter_openat_events), handle_event, NULL, NULL);
+    if (!rb)
     {
-        /* trigger our BPF program */
-        fprintf(stderr, ".");
-        sleep(1);
+        err = -1;
+        fprintf(stderr, "Failed to create ring buffer\n");
+        goto cleanup;
+    }
+
+    printf("%-8s %-5s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
+
+    while (true)
+    {
+        err = ring_buffer__poll(rb, 100 /* timeout, ms */);
+        /* Ctrl-C will cause -EINTR */
+        if (err == -EINTR)
+        {
+            err = 0;
+            break;
+        }
+        if (err < 0)
+        {
+            printf("Error polling perf buffer: %d\n", err);
+            break;
+        }
     }
 
 cleanup:
+    ring_buffer__free(rb);
     tp_openat_bpf__destroy(skel);
-    return -err;
+    return err < 0 ? -err : 0;
 }

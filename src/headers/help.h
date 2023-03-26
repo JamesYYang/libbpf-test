@@ -34,13 +34,15 @@
 #define ETH_P_IP 0x0800 /* Internet Protocol packet        */
 #define CAP_OPT_NOAUDIT 0b10
 
-struct task_base_info
+struct sys_openat_event
 {
-    u32 pid;
-    u32 tgid;
-    u32 ppid;
+    int pid;
+    int tgid;
+    int ppid;
     char comm[16];
+    char filename[256];
 };
+
 /*
 struct net_sock_event
 {
@@ -63,7 +65,7 @@ struct net_packet_event
   u16 dport; //目的端口
   bool ingress;
 };
-*/
+
 static inline void get_task_info(void *t)
 {
     struct task_base_info *base_info = (struct task_base_info *)t;
@@ -73,3 +75,4 @@ static inline void get_task_info(void *t)
     base_info->ppid = READ_KERN(READ_KERN(task->real_parent)->pid);
     bpf_get_current_comm(base_info->comm, sizeof(base_info->comm));
 }
+*/
