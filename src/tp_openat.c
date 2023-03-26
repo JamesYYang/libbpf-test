@@ -32,6 +32,19 @@ static int handle_event(void *ctx, void *data, size_t data_sz)
     return 0;
 }
 
+// WSL kernel install libbpf-dev 1.0.5 not set rlimit.
+// can remove after 1.1.0
+int bump_rlimit_memlock(void)
+{
+    struct rlimit rlim;
+
+    rlim.rlim_cur = rlim.rlim_max = RLIM_INFINITY;
+    if (setrlimit(RLIMIT_MEMLOCK, &rlim))
+        return -1;
+
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     struct ring_buffer *rb = NULL;
@@ -40,6 +53,12 @@ int main(int argc, char **argv)
 
     /* Set up libbpf errors and debug info callback */
     libbpf_set_print(libbpf_print_fn);
+
+    if (bump_rlimit_memlock() == -1)
+    {
+        fprintf(stderr, "set rlimit failed\n");
+        return 1;
+    }
 
     /* Open BPF application */
     skel = tp_openat_bpf__open();
