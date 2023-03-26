@@ -14,7 +14,7 @@ int handle_tp(void *ctx)
 
     bpf_get_current_comm(&comm, sizeof(comm));
 
-    bpf_printk("BPF triggered from PID %d and COMM %s.\n", pid, comm);
+    bpf_printk("BPF triggered from PID %d and myid %d and COMM %s.\n", pid, my_pid, comm);
 
     return 0;
 }

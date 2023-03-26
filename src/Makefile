@@ -1,6 +1,6 @@
 APP := hello
 
-all: bpf exe 
+all: bpf skeleton exe 
 
 bpf:
 	mkdir -p output

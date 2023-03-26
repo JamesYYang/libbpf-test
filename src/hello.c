@@ -1,7 +1,10 @@
+// SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
+/* Copyright (c) 2020 Facebook */
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/resource.h>
 #include <bpf/libbpf.h>
+#include "hello.skel.h"
 
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
 {
@@ -10,33 +13,34 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
 
 int main(int argc, char **argv)
 {
-    struct bpf_object *obj;
+    struct hello_bpf *skel;
     int err;
 
     /* Set up libbpf errors and debug info callback */
     libbpf_set_print(libbpf_print_fn);
 
     /* Open BPF application */
-    obj = bpf_object__open_file("output/hello.bpf.o", NULL);
-    if (!obj)
+    skel = hello_bpf__open();
+    if (!skel)
     {
         fprintf(stderr, "Failed to open BPF skeleton\n");
         return 1;
     }
 
+    /* ensure BPF program only handles write() syscalls from our process */
+    skel->bss->my_pid = getpid();
+
     /* Load & verify BPF programs */
-    err = bpf_object__load(obj);
-    if (err < 0)
+    err = hello_bpf__load(skel);
+    if (err)
     {
-        fprintf(stderr, "Failed to load and verify BPF obj\n");
-        return 1;
+        fprintf(stderr, "Failed to load and verify BPF skeleton\n");
+        goto cleanup;
     }
 
-    struct bpf_program *prog = bpf_object__find_program_by_name(obj, "handle_tp");
-
     /* Attach tracepoint handler */
-    struct bpf_link *link = bpf_program__attach(prog);
-    if (!link)
+    err = hello_bpf__attach(skel);
+    if (err)
     {
         fprintf(stderr, "Failed to attach BPF skeleton\n");
         goto cleanup;
@@ -47,12 +51,12 @@ int main(int argc, char **argv)
 
     for (;;)
     {
+        /* trigger our BPF program */
         fprintf(stderr, ".");
-        sleep(5);
+        sleep(1);
     }
 
 cleanup:
-    bpf_link__destroy(link);
-    bpf_object__close(obj);
+    hello_bpf__destroy(skel);
     return -err;
 }
