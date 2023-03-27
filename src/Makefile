@@ -1,4 +1,4 @@
-APP := tp_openat
+APP := tp_execve
 
 all: bpf skeleton exe 
 

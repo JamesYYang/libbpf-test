@@ -5,7 +5,7 @@
 #include <time.h>
 #include <sys/resource.h>
 #include "help.h"
-#include "tp_openat.skel.h"
+#include "tp_execve.skel.h"
 
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
 {
@@ -25,7 +25,7 @@ static int handle_event(void *ctx, void *data, size_t data_sz)
     strftime(ts, sizeof(ts), "%H:%M:%S", tm);
 
     printf("%-8s %-5s %-16s %-7d %-7d %s\n",
-           ts, "OPENAT", e->comm, e->pid, e->ppid, e->filename);
+           ts, "EXECVE", e->comm, e->pid, e->ppid, e->filename);
 
     return 0;
 }
@@ -46,7 +46,7 @@ int bump_rlimit_memlock(void)
 int main(int argc, char **argv)
 {
     struct ring_buffer *rb = NULL;
-    struct tp_openat_bpf *skel;
+    struct tp_execve_bpf *skel;
     int err;
 
     /* Set up libbpf errors and debug info callback */
@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     }
 
     /* Open BPF application */
-    skel = tp_openat_bpf__open();
+    skel = tp_execve_bpf__open();
     if (!skel)
     {
         fprintf(stderr, "Failed to open BPF skeleton\n");
@@ -67,7 +67,7 @@ int main(int argc, char **argv)
     }
 
     /* Load & verify BPF programs */
-    err = tp_openat_bpf__load(skel);
+    err = tp_execve_bpf__load(skel);
     if (err)
     {
         fprintf(stderr, "Failed to load and verify BPF skeleton\n");
@@ -75,7 +75,7 @@ int main(int argc, char **argv)
     }
 
     /* Attach tracepoint handler */
-    err = tp_openat_bpf__attach(skel);
+    err = tp_execve_bpf__attach(skel);
     if (err)
     {
         fprintf(stderr, "Failed to attach BPF skeleton\n");
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     }
 
     /* Set up ring buffer polling */
-    rb = ring_buffer__new(bpf_map__fd(skel->maps.sys_enter_openat_events), handle_event, NULL, NULL);
+    rb = ring_buffer__new(bpf_map__fd(skel->maps.sys_enter_execve_events), handle_event, NULL, NULL);
     if (!rb)
     {
         err = -1;
@@ -111,6 +111,6 @@ int main(int argc, char **argv)
 
 cleanup:
     ring_buffer__free(rb);
-    tp_openat_bpf__destroy(skel);
+    tp_execve_bpf__destroy(skel);
     return err < 0 ? -err : 0;
 }
