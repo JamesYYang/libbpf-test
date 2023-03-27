@@ -12,9 +12,25 @@ static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va
     return vfprintf(stderr, format, args);
 }
 
+static void handle_args(struct sys_execve_event *e, char *p_args)
+{
+    for (int i = 0; i < e->buf_off - 1; i++)
+    {
+        char c = e->args[i];
+        if (c == '\0')
+        {
+            p_args[i] = ' ';
+        }
+        else
+        {
+            p_args[i] = c;
+        }
+    }
+}
+
 static int handle_event(void *ctx, void *data, size_t data_sz)
 {
-    const struct sys_openat_event *e = data;
+    struct sys_execve_event *e = data;
 
     struct tm *tm;
     char ts[32];
@@ -24,8 +40,11 @@ static int handle_event(void *ctx, void *data, size_t data_sz)
     tm = localtime(&t);
     strftime(ts, sizeof(ts), "%H:%M:%S", tm);
 
-    printf("%-8s %-5s %-16s %-7d %-7d %s\n",
-           ts, "EXECVE", e->comm, e->pid, e->ppid, e->filename);
+    char p_args[e->buf_off - 1];
+    handle_args(e, p_args);
+
+    printf("%-8s %-5s %-16s %-7d %-7d %s %s\n",
+           ts, "EXECVE", e->comm, e->pid, e->ppid, e->filename, p_args);
 
     return 0;
 }
@@ -91,7 +110,7 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    printf("%-8s %-5s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
+    printf("%-8s %-10s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
 
     while (true)
     {

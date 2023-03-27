@@ -91,7 +91,7 @@ int main(int argc, char **argv)
         goto cleanup;
     }
 
-    printf("%-8s %-5s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
+    printf("%-8s %-10s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
 
     while (true)
     {

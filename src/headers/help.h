@@ -23,7 +23,7 @@
 
 #define MAX_PERCPU_BUFSIZE 10240
 #define MAX_STR_ARR_ELEM 40
-#define MAX_STRING_SIZE 4096
+#define MAX_STRING_SIZE 128
 
 #define TC_ACT_UNSPEC (-1)
 #define TC_ACT_OK 0
@@ -41,6 +41,17 @@ struct sys_openat_event
     int ppid;
     char comm[16];
     char filename[256];
+};
+
+struct sys_execve_event
+{
+    int pid;
+    int tgid;
+    int ppid;
+    uint buf_off;
+    char comm[16];
+    char filename[256];
+    char args[MAX_PERCPU_BUFSIZE];
 };
 
 /*
