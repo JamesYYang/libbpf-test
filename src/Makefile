@@ -1,17 +1,16 @@
-APP := tp_execve
-
 all: bpf skeleton exe 
 
 bpf:
 	mkdir -p output
-	clang -g -O2 -c -target bpf -D__TARGET_ARCH_x86_64 -I./headers -o output/$(APP).bpf.o $(APP).bpf.c
+	clang -g -O2 -c -target bpf -D__TARGET_ARCH_x86_64 -I./headers -o output/tp_openat.bpf.o tp_openat.bpf.c
+	clang -g -O2 -c -target bpf -D__TARGET_ARCH_x86_64 -I./headers -o output/tp_execve.bpf.o tp_execve.bpf.c
 
 skeleton:
-	bpftool gen skeleton output/$(APP).bpf.o > output/$(APP).skel.h
+	bpftool gen skeleton output/tp_openat.bpf.o > output/tp_openat.skel.h
+	bpftool gen skeleton output/tp_execve.bpf.o > output/tp_execve.skel.h
 
 exe:
-	clang -g -O2 -Wall -I./output -I./headers -c $(APP).c -o output/$(APP).o
-	clang -Wall -O2 -g output/$(APP).o -static -lbpf -lelf -lz -o output/$(APP)
+	clang -Wall -O2 -g -I./output -I./headers -lbpf -lelf -lz -o output/my_libbpf main.c tp_execve.c tp_openat.c
 
 clean:
 	rm -f output/*
