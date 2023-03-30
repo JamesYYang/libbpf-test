@@ -58,6 +58,17 @@ struct sys_execve_event
     char args[MAX_PERCPU_BUFSIZE];
 };
 
+struct net_tcp_event
+{
+    u32 pid;
+    u16 event;
+    u32 saddr;
+    u32 daddr;
+    u16 sport;
+    u16 dport;
+    char comm[16];
+};
+
 /*
 struct net_sock_event
 {

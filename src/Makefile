@@ -12,7 +12,7 @@ skeleton:
 	bpftool gen skeleton output/tcp_connect.bpf.o > output/tcp_connect.skel.h
 
 exe:
-	clang -Wall -O2 -g -I./output -I./headers -lbpf -lelf -lz -o output/my_libbpf main.c tp_execve.c tp_openat.c
+	clang -Wall -O2 -g -I./output -I./headers -lbpf -lelf -lz -o output/my_libbpf main.c tp_execve.c tp_openat.c tcp_connect.c
 
 clean:
 	rm -f output/*

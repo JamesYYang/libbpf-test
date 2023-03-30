@@ -5,17 +5,6 @@
 
 char LICENSE[] SEC("license") = "Dual BSD/GPL";
 
-struct net_tcp_event
-{
-    u32 pid;
-    u16 event;
-    u16 sport;
-    u16 dport;
-    char comm[16];
-    char saddr[16];
-    char daddr[16];
-};
-
 /* BPF ringbuf map */
 struct
 {
@@ -33,6 +22,7 @@ struct
 SEC("tp/sock/inet_sock_set_state")
 int tracepoint_inet_sock_set_state(struct trace_event_raw_inet_sock_set_state *ctx)
 {
+    struct sock *sk = (struct sock *)ctx->skaddr;
     u16 family = ctx->family;
     u16 event;
     if (family == AF_INET) // ipv4
@@ -63,8 +53,8 @@ int tracepoint_inet_sock_set_state(struct trace_event_raw_inet_sock_set_state *c
         data->event = event;
         data->pid = bpf_get_current_pid_tgid() >> 32;
         bpf_get_current_comm(data->comm, sizeof(data->comm));
-        bpf_probe_read(data->saddr, 4, ctx->saddr);
-        bpf_probe_read(data->daddr, 4, ctx->daddr);
+        data->saddr = BPF_CORE_READ(sk, __sk_common.skc_rcv_saddr);
+        data->daddr = BPF_CORE_READ(sk, __sk_common.skc_daddr);
         data->sport = ctx->sport;
         data->dport = ctx->dport;
 
