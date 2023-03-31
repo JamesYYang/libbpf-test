@@ -18,8 +18,12 @@
 #define memcpy(dest, src, n) __builtin_memcpy((dest), (src), (n))
 #define ctx_ptr(field) (void *)(long)(field)
 
+#ifndef AF_INET
 #define AF_INET 2
+#endif
+#ifndef AF_INET6
 #define AF_INET6 10
+#endif
 
 #define TCP_EVENT_CONNECT 1
 #define TCP_EVENT_ACCEPT 2
@@ -60,12 +64,12 @@ struct sys_execve_event
 
 struct net_tcp_event
 {
-    u32 pid;
-    u16 event;
-    u32 saddr;
-    u32 daddr;
-    u16 sport;
-    u16 dport;
+    __u32 pid;
+    __u16 event;
+    __u32 saddr;
+    __u32 daddr;
+    __u16 sport;
+    __u16 dport;
     char comm[16];
 };
 

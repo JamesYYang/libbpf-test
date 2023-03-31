@@ -31,6 +31,15 @@ void trace_execve()
     }
 }
 
+void trace_tcp()
+{
+    pid_t pid = fork();
+    if (pid == 0)
+    {
+        load_tcp_connect();
+    }
+}
+
 // WSL kernel install libbpf-dev 1.0.5 not set rlimit.
 // can remove after 1.1.0
 int bump_rlimit_memlock(void)
@@ -54,11 +63,13 @@ int main(int argc, char **argv)
         return 1;
     }
 
-    printf("%-8s %-10s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
+    // printf("%-8s %-10s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
 
-    trace_openat();
+    // trace_openat();
 
-    trace_execve();
+    // trace_execve();
+
+    trace_tcp();
 
     while (1)
     {

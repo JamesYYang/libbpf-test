@@ -9,6 +9,12 @@
 #include "help.h"
 #include "tcp_connect.skel.h"
 
+static const char *tcp_event[] = {
+    [1] = "CONNECT",
+    [2] = "ACCEPT",
+    [3] = "CLOSE",
+};
+
 static int libbpf_print_fn(enum libbpf_print_level level, const char *format, va_list args)
 {
     return vfprintf(stderr, format, args);
@@ -31,8 +37,8 @@ static int handle_event(void *ctx, void *data, size_t data_sz)
     inet_ntop(AF_INET, &e->daddr, daddr, sizeof(daddr));
     // data->saddr
 
-    printf("%-8s %-5s %-16s %-7d %-20s %-5d %20s %-5d\n",
-           ts, "TCP", e->comm, e->pid, saddr, e->sport, daddr, e->dport);
+    printf("%-8s %-10s %-16s %-20s %-5d %-20s %-5d\n",
+           ts, tcp_event[e->event], e->comm, saddr, e->sport, daddr, e->dport);
 
     return 0;
 }
@@ -79,7 +85,7 @@ int load_tcp_connect()
         goto cleanup;
     }
 
-    // printf("%-8s %-10s %-16s %-7s %-7s %s\n", "TIME", "EVENT", "COMM", "PID", "PPID", "FILENAME");
+    printf("%-8s %-10s %-16s %-20s %-5s %-20s %-5s\n", "TIME", "EVENT", "COMM", "SADDR", "SPORT", "DADDR", "DPORT");
 
     while (true)
     {
